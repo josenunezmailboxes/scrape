@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Scraper</title>
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+function App() {
+    const [domain, setDomain] = React.useState("");
+    const [apiKey, setApiKey] = React.useState("");
+    const [message, setMessage] = React.useState("");
+
+    const startScrape = async () => {
+        const resp = await fetch('/scrape', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({domain, api_key: apiKey})
+        });
+        const data = await resp.json();
+        setMessage(data.message);
+    };
+
+    return (
+        <div>
+            <h1>Domain Scraper</h1>
+            <input placeholder="ScraperAPI key" value={apiKey} onChange={e => setApiKey(e.target.value)} />
+            <input placeholder="Domain" value={domain} onChange={e => setDomain(e.target.value)} />
+            <button onClick={startScrape}>Start Scraping</button>
+            <p>{message}</p>
+        </div>
+    );
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
+</body>
+</html>
