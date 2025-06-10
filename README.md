@@ -12,10 +12,16 @@ pip install -r requirements.txt
 python scraperapp/app.py
 ```
 
+POST `/scrape` with JSON body containing `api_key`, `domain`, and optional
+`workers` (default 5) or use the included React UI.
+
 POST `/scrape` with JSON body containing `api_key` and `domain` or use the
 included React UI.
 
 ## Frontend
 
 Open `http://localhost:5000` once the Flask app is running. Enter your
+ScraperAPI key, the domain to crawl, and how many concurrent workers to use,
+then press **Start Scraping**.
+
 ScraperAPI key and the domain to crawl, then press **Start Scraping**.
