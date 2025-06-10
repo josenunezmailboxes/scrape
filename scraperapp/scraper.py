@@ -3,13 +3,18 @@ from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from pymongo import MongoClient
 
 
 class BFSScraper:
     """Breadth-first scraper that stores results in MongoDB."""
 
+
     def __init__(self, api_key, start_url, mongo_uri="mongodb://localhost:27017", db_name="scraper", workers=5):
+
+    def __init__(self, api_key, start_url, mongo_uri="mongodb://localhost:27017", db_name="scraper"):
+
         self.api_key = api_key
         self.start_url = start_url if start_url.startswith("http") else f"http://{start_url}"
         parsed = urlparse(self.start_url)
@@ -17,7 +22,9 @@ class BFSScraper:
         self.client = MongoClient(mongo_uri)
         self.db = self.client[db_name]
         self.pages = self.db.pages
+
         self.workers = workers
+
 
     def _already_scraped(self, url):
         return self.pages.count_documents({"url": url}, limit=1) != 0
@@ -65,6 +72,25 @@ class BFSScraper:
                     except Exception:
                         continue
 
+    def run(self):
+        queue = deque([self.start_url])
+        visited = set()
+        while queue:
+            url = queue.popleft()
+            if url in visited or self._already_scraped(url):
+                continue
+            try:
+                html = self.fetch(url)
+            except Exception:
+                continue
+            self.pages.insert_one({"url": url, "html": html})
+            visited.add(url)
+            soup = BeautifulSoup(html, "html.parser")
+            for tag in soup.find_all("a", href=True):
+                link = urljoin(url, tag["href"])
+                if link.startswith(self.base) and link not in visited:
+                    queue.append(link)
+
 
 if __name__ == "__main__":
     import argparse
@@ -78,3 +104,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     BFSScraper(args.api_key, args.domain, args.mongo, args.db, workers=args.workers).run()
+
+    args = parser.parse_args()
+
+    BFSScraper(args.api_key, args.domain, args.mongo, args.db).run()

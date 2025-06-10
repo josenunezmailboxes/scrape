@@ -20,6 +20,10 @@ def scrape_route():
         return jsonify({'message': 'api_key and domain required'}), 400
 
     scraper = BFSScraper(api_key, domain, workers=workers)
+    if not api_key or not domain:
+        return jsonify({'message': 'api_key and domain required'}), 400
+
+    scraper = BFSScraper(api_key, domain)
     scraper.run()
     return jsonify({'message': 'scraping finished'})
 
